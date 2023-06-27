@@ -1,93 +1,113 @@
 #include <iostream>
-#include <unordered_map>
-#include <memory>
-using namespace std;
+#include <vector>
+#include <list>
+#include <string>
 
-class No {
-private:
-    unordered_map<char, shared_ptr<No>> filho;
-    bool finalPalavra;
+const int ALPHABET_SIZE = 26;
 
-public:
-    No() : finalPalavra(false) {}
+struct Ocorrencia {
+    int posicao;
+    Ocorrencia* proximo;
 
-    bool temFilho(char ch) const {
-        return filho.find(ch) != filho.end();
-    }
+    Ocorrencia(int pos) : posicao(pos), proximo(nullptr) {}
+};
 
-    shared_ptr<No> getFilho(char ch) const {
-        return filho.at(ch);
-    }
+struct Documento {
+    std::string nome;
+    std::list<Ocorrencia*> ocorrencias;
+    Documento* proximo;
 
-    void addFilho(char ch, shared_ptr<No> child) {
-        filho[ch] = child;
-    }
+    Documento(const std::string& docNome) : nome(docNome), proximo(nullptr) {}
+};
 
-    bool finalP() const {
-        return finalPalavra;
-    }
+struct No {
+    std::string chave;
+    std::list<Documento*> documentos;
+    std::vector<No*> filhos;
 
-    void setFinalP() {
-        finalPalavra = true;
-    }
+    No(const std::string& chaveNo) : chave(chaveNo), filhos(ALPHABET_SIZE + 1, nullptr) {}
 };
 
 class Trie {
 private:
-    shared_ptr<No> raiz;
+    No* raiz;
 
 public:
-    Trie() : raiz(make_shared<No>()) {}
-
-    void insere(const string& palavra) {
-        shared_ptr<No> noAtual = raiz;
-
-        for (char ch : palavra) {
-            if (!noAtual->temFilho(ch)) {
-                shared_ptr<No> newChild = make_shared<No>();
-                noAtual->addFilho(ch, newChild);
-            }
-
-            noAtual = noAtual->getFilho(ch);
-        }
-
-        noAtual->setFinalP();
+    Trie() {
+        raiz = new No("");
     }
 
-    bool procurarFrase(const string& palavra) const {
-        shared_ptr<No> noAtual = raiz;
+    void inserir(const std::string& palavra, const std::string& nomeDocumento, int posicao) {
+        No* atual = raiz;
 
-        for (char ch : palavra) {
-            if (!noAtual->temFilho(ch)) {
-                return false;
+        for (char c : palavra) {
+            int indice = c - 'a';
+            if (atual->filhos[indice] == nullptr) {
+                atual->filhos[indice] = new No(atual->chave + c);
             }
-
-            noAtual = noAtual->getFilho(ch);
+            atual = atual->filhos[indice];
         }
 
-        return noAtual->finalP();
+        // Cria ou encontra o nó do documento
+        Documento* documentoNo = nullptr;
+        for (auto doc : atual->documentos) {
+            if (doc->nome == nomeDocumento) {
+                documentoNo = doc;
+                break;
+            }
+        }
+        if (documentoNo == nullptr) {
+            documentoNo = new Documento(nomeDocumento);
+            atual->documentos.push_back(documentoNo);
+        }
+
+        // Cria o nó de ocorrência e adiciona ao documento
+        Ocorrencia* ocorrenciaNo = new Ocorrencia(posicao);
+        documentoNo->ocorrencias.push_back(ocorrenciaNo);
     }
 
-    bool procurarPalavra(const string& prefix) const {
-        shared_ptr<No> noAtual = raiz;
+    std::list<Ocorrencia*> buscar(const std::string& palavra) {
+        std::list<Ocorrencia*> ocorrencias;
 
-        for (char ch : prefix) {
-            if (!noAtual->temFilho(ch)) {
-                return false;
+        No* atual = raiz;
+
+        for (char c : palavra) {
+            int indice = c - 'a';
+            if (atual->filhos[indice] == nullptr) {
+                // Palavra não encontrada, retorna lista vazia
+                return ocorrencias;
             }
-            noAtual = noAtual->getFilho(ch);
+            atual = atual->filhos[indice];
         }
 
-        return true;
+        // Encontrou a palavra, adiciona as ocorrências de cada documento à lista
+        for (Documento* doc : atual->documentos) {
+            for (Ocorrencia* ocorrencia : doc->ocorrencias) {
+                ocorrencias.push_back(ocorrencia);
+            }
+        }
+
+        return ocorrencias;
     }
 };
 
 int main() {
     Trie trie;
+    trie.inserir("exemplo", "documento1.txt", 10);
+    trie.inserir("exem", "documento2.txt", 5);
 
-    trie.insere("apple");
 
-    cout << "Search 'apple': " << (trie.procurarPalavra("apple") ? "Found" : "Not Found") << endl;
+    std::string palavraBusca = "exe";
+    std::list<Ocorrencia*> ocorrencias = trie.buscar(palavraBusca);
+
+    if (ocorrencias.empty()) {
+        std::cout << "Palavra '" << palavraBusca << "' nao encontrada." << std::endl;
+    } else {
+        std::cout << "Ocorrencias da palavra '" << palavraBusca << "':" << std::endl;
+        for (Ocorrencia* ocorrencia : ocorrencias) {
+            std::cout << ", Posicao: " << ocorrencia->posicao << std::endl;
+        }
+    }
 
     return 0;
 }
