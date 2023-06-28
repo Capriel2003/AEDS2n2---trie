@@ -2,48 +2,71 @@
 #include <vector>
 #include <list>
 #include <string>
+#include <regex>
+#include <algorithm>
+using namespace std;
 
-const int ALPHABET_SIZE = 26;
+const int TamAlfabeto = 26;
+
+string tratarTexto(const string& texto) {
+    // Converter caracteres maiúsculos para minúsculos
+    string textoTratado = texto;
+    transform(textoTratado.begin(), textoTratado.end(), textoTratado.begin(), ::tolower);
+
+    // Substituir caracteres especiais
+    regex expressao("[áàãâäéèêëíìîïóòõôöúùûüç]", regex_constants::icase);
+    textoTratado = regex_replace(textoTratado, expressao, "$1");
+
+    // Remover caracteres não alfanuméricos e espaços em branco
+    textoTratado = regex_replace(textoTratado, regex("[^a-zA-Z0-9\\s]"), "");
+
+    return textoTratado;
+}
 
 struct Ocorrencia {
     int posicao;
     Ocorrencia* proximo;
-
-    Ocorrencia(int pos) : posicao(pos), proximo(nullptr) {}
+    Ocorrencia(int pos) : posicao(pos), proximo(nullptr) {
+        //vazio
+    }
 };
 
 struct Documento {
-    std::string nome;
-    std::list<Ocorrencia*> ocorrencias;
+    string nome;
+    list<Ocorrencia*> ocorrencias;
     Documento* proximo;
-
-    Documento(const std::string& docNome) : nome(docNome), proximo(nullptr) {}
+    Documento(const string& docNome) : nome(docNome), proximo(nullptr) {
+        //construtor vazio com nenhuma entrada
+    }
 };
 
-struct No {
-    std::string chave;
-    std::list<Documento*> documentos;
-    std::vector<No*> filhos;
-
-    No(const std::string& chaveNo) : chave(chaveNo), filhos(ALPHABET_SIZE + 1, nullptr) {}
+struct NoTrie {
+    string chave;
+    list<Documento*> documentos;
+    vector<NoTrie*> filhos;
+    NoTrie(const string& chaveNo) : chave(chaveNo), filhos(TamAlfabeto, nullptr) {
+        //contrutor NoTrie vazio
+    }
 };
 
 class Trie {
 private:
-    No* raiz;
+    NoTrie* raiz;
 
 public:
     Trie() {
-        raiz = new No("");
+        //como nao teve nenhuma entrada, a raiz recebe um valor vazio
+        raiz = new NoTrie("");
     }
 
-    void inserir(const std::string& palavra, const std::string& nomeDocumento, int posicao) {
-        No* atual = raiz;
+    void inserir(const string& palavra, const string& nomeDocumento, int posicao) {
+        NoTrie* atual = raiz;
 
-        for (char c : palavra) {
-            int indice = c - 'a';
+        for (char x : palavra) {
+            int indice = x - 'a';
             if (atual->filhos[indice] == nullptr) {
-                atual->filhos[indice] = new No(atual->chave + c);
+                atual->filhos[indice] = new NoTrie(atual->chave + x);
+                cout << "string2 " << x << endl;
             }
             atual = atual->filhos[indice];
         }
@@ -66,10 +89,10 @@ public:
         documentoNo->ocorrencias.push_back(ocorrenciaNo);
     }
 
-    std::list<Ocorrencia*> buscar(const std::string& palavra) {
-        std::list<Ocorrencia*> ocorrencias;
+    list<Ocorrencia*> buscar(const string& palavra) {
+        list<Ocorrencia*> ocorrencias;
 
-        No* atual = raiz;
+        NoTrie* atual = raiz;
 
         for (char c : palavra) {
             int indice = c - 'a';
@@ -94,18 +117,22 @@ public:
 int main() {
     Trie trie;
     trie.inserir("exemplo", "documento1.txt", 10);
+    trie.inserir("exemplo", "documento1.txt", 4);
+    trie.inserir("examplo", "documento5.txt", 50);
+    trie.inserir("exam", "documento2.txt", 5);
     trie.inserir("exem", "documento2.txt", 5);
 
 
-    std::string palavraBusca = "exe";
-    std::list<Ocorrencia*> ocorrencias = trie.buscar(palavraBusca);
+    string palavraBusca = "exemplo";
+    list<Ocorrencia*> ocorrencias = trie.buscar(palavraBusca);
 
     if (ocorrencias.empty()) {
-        std::cout << "Palavra '" << palavraBusca << "' nao encontrada." << std::endl;
-    } else {
-        std::cout << "Ocorrencias da palavra '" << palavraBusca << "':" << std::endl;
+        cout << "Palavra '" << palavraBusca << "' nao encontrada." << endl;
+    } 
+    else {
+        cout << "Ocorrencias da palavra '" << palavraBusca << "':" << endl;
         for (Ocorrencia* ocorrencia : ocorrencias) {
-            std::cout << ", Posicao: " << ocorrencia->posicao << std::endl;
+            cout << "Posicao: " << ocorrencia->posicao << endl;
         }
     }
 
