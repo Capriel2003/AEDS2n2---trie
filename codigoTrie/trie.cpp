@@ -21,23 +21,22 @@ vector<string> separaFrase(string frase){
     return separado;
 }
 
-string tratarTexto(const string& texto) {
+string tratarTexto(string& texto) {
     // Converter caracteres maiúsculos para minúsculos
-    string textoTratado = texto;
-    transform(textoTratado.begin(), textoTratado.end(), textoTratado.begin(), ::tolower);
+    transform(texto.begin(), texto.end(), texto.begin(), ::tolower);
 
     // Substituir caracteres acentuados por suas versões sem acento
-    textoTratado = regex_replace(textoTratado, regex("[áàãâä]"), "a");
-    textoTratado = regex_replace(textoTratado, regex("[éèêë]"), "e");
-    textoTratado = regex_replace(textoTratado, regex("[íìîï]"), "i");
-    textoTratado = regex_replace(textoTratado, regex("[óòõôö]"), "o");
-    textoTratado = regex_replace(textoTratado, regex("[úùûü]"), "u");
-    textoTratado = regex_replace(textoTratado, regex("[ç]"), "c");
+    texto = regex_replace(texto, regex("[áàãâä]"), "a");
+    texto = regex_replace(texto, regex("[éèêë]"), "e");
+    texto = regex_replace(texto, regex("[íìîï]"), "i");
+    texto = regex_replace(texto, regex("[óòõôö]"), "o");
+    texto = regex_replace(texto, regex("[úùûü]"), "u");
+    texto = regex_replace(texto, regex("[ç]"), "c");
 
     // Remover caracteres não alfanuméricos e espaços em branco
-    textoTratado = regex_replace(textoTratado, regex("[^a-zA-Z\\s]"), "");
+    texto = regex_replace(texto, regex("[^a-zA-Z\\s]"), "");
 
-    return textoTratado;
+    return texto;
 }
 
 class Ocorrencia {
@@ -157,7 +156,7 @@ public:
 
 int main() {
     Trie trie;
-    string p = "exemplo";
+    string p = "Exemplõ";
     tratarTexto(p);
     trie.inserir("exemplo", "documento1.txt", 10);
     trie.inserir(p, "documento2.txt", 4);
