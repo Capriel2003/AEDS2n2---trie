@@ -9,7 +9,6 @@ using namespace std;
 
 const int TamAlfabeto = 26;
 
-
 vector<string> separaFrase(string frase){
     vector<string> separado;
 
@@ -27,12 +26,16 @@ string tratarTexto(const string& texto) {
     string textoTratado = texto;
     transform(textoTratado.begin(), textoTratado.end(), textoTratado.begin(), ::tolower);
 
-    // Substituir caracteres especiais
-    regex expressao("[áàãâäéèêëíìîïóòõôöúùûüç]", regex_constants::icase);
-    textoTratado = regex_replace(textoTratado, expressao, "$1");
+    // Substituir caracteres acentuados por suas versões sem acento
+    textoTratado = regex_replace(textoTratado, regex("[áàãâä]"), "a");
+    textoTratado = regex_replace(textoTratado, regex("[éèêë]"), "e");
+    textoTratado = regex_replace(textoTratado, regex("[íìîï]"), "i");
+    textoTratado = regex_replace(textoTratado, regex("[óòõôö]"), "o");
+    textoTratado = regex_replace(textoTratado, regex("[úùûü]"), "u");
+    textoTratado = regex_replace(textoTratado, regex("[ç]"), "c");
 
     // Remover caracteres não alfanuméricos e espaços em branco
-    textoTratado = regex_replace(textoTratado, regex("[^a-zA-Z0-9\\s]"), "");
+    textoTratado = regex_replace(textoTratado, regex("[^a-zA-Z\\s]"), "");
 
     return textoTratado;
 }
@@ -44,7 +47,7 @@ class Ocorrencia {
         Ocorrencia(int pos) : posicao(pos), proximo(nullptr) {
             //vazio
         }
-        friend std::ostream& operator<<(std::ostream& os, const Ocorrencia& ocorrencia) {
+        friend ostream& operator<<(ostream& os, const Ocorrencia& ocorrencia) {
             os << "Posicao: " << ocorrencia.posicao;
             return os;
         }
@@ -111,8 +114,8 @@ public:
         documentoNo->ocorrencias.push_back(ocorrenciaNo);
     }
 
-    map<string, list<Ocorrencia*>> buscaPalavra(const string& palavra) {
-        map<string, list<Ocorrencia*>> ocorrencias;
+    map<string, pair<string, list<Ocorrencia*>>> buscaPalavra(const string& palavra) {
+        map<string, pair<string, list<Ocorrencia*>>> ocorrencias;
 
         NoTrie* atual = raiz;
 
@@ -128,32 +131,23 @@ public:
         // Encontrou a palavra, comeca a incrementar essas ocorrencias numa lista
         for (Documento* doc : atual->documentos) {
             for (Ocorrencia* ocorrencia : doc->ocorrencias) {
-                ocorrencias[doc->nome].push_back(ocorrencia);
+                ocorrencias[doc->nome].first=palavra;
+                ocorrencias[doc->nome].second.push_back(ocorrencia);
             }
         }
 
         return ocorrencias;
     }
 
-    map<string,list<list<Ocorrencia*>>> buscaFrase(const string& fraseInt){
+    map<string,list<pair<string, list<Ocorrencia*>>>> buscaFrase(const string& fraseInt){
         vector <string> frase = separaFrase(fraseInt);
-        map<string, list<list<Ocorrencia*>>> ocorrencias;
-        map<string, list<Ocorrencia*>> aux;
+        map<string,list<pair<string, list<Ocorrencia*>>>> ocorrencias;
+        map<string, pair<string, list<Ocorrencia*>>> aux;
 
         for(auto x: frase){
             aux = buscaPalavra(x);
             for(auto y: aux){
                 ocorrencias[y.first].push_back(y.second);
-            }
-        }
-
-        for (const auto& ocorrencia : ocorrencias) {
-            cout << "Documento: " << ocorrencia.first << endl;
-            for (const auto& listaOcorrencias : ocorrencia.second) {
-                for (const auto& ocorrenciaPtr : listaOcorrencias) {
-                    cout << "Palavra: " << x << endl;
-                    cout << "Posicao: " << ocorrenciaPtr->posicao << endl;
-                }
             }
         }
 
@@ -163,8 +157,12 @@ public:
 
 int main() {
     Trie trie;
+    string p = "exemplo";
+    tratarTexto(p);
     trie.inserir("exemplo", "documento1.txt", 10);
-    trie.inserir("exemplo", "documento2.txt", 4);
+    trie.inserir(p, "documento2.txt", 4);
+    trie.inserir("exemplo", "documento7.txt", 4);
+    trie.inserir("exemplo", "documento25.txt", 4);
     trie.inserir("seu", "documento5.txt", 50);
     trie.inserir("pai", "documento2.txt", 5);
     trie.inserir("exem", "documento2.txt", 5);
@@ -172,8 +170,8 @@ int main() {
 
     string palavraBusca = "exemplo";
     string fraseBusca = "seu pai eh corno";
-    map<string, list<Ocorrencia*>> ocorrenciasPalavra = trie.buscaPalavra(palavraBusca);
-    map<string, list<list<Ocorrencia*>>> ocorrenciaFrase = trie.buscaFrase(fraseBusca);
+    map<string, pair<string, list<Ocorrencia*>>>  ocorrenciasPalavra = trie.buscaPalavra(palavraBusca);
+    map<string,list<pair<string, list<Ocorrencia*>>>> ocorrenciaFrase = trie.buscaFrase(fraseBusca);
     
 
 
@@ -187,12 +185,11 @@ int main() {
         cout << "Ocorrencias da palavra '" << palavraBusca << "':" << endl;
         for (auto ocorrencia : ocorrenciasPalavra) {
             cout << ocorrencia.first << endl;
-            for(auto x: ocorrencia.second){
+            for(auto x: ocorrencia.second.second){
                 cout << *x <<endl;
             }
         }
     }
-
 
 
     if (ocorrenciaFrase.empty()) {
@@ -201,14 +198,16 @@ int main() {
     else {
         cout << "Ocorrencias da palavra '" << fraseBusca << "':" << endl;
         for (auto ocorrencia : ocorrenciaFrase) {
-            cout << ocorrencia.first << endl;
+            cout << "Documento: " << ocorrencia.first << endl;
             for(auto x: ocorrencia.second){
-                for(auto y: x){
-                    cout << *y <<endl;
+                cout << "Palavra: " << x.first << endl;
+                for (auto y: x.second){
+                    cout << *y << endl;
                 }
             }
         }
     }
+
 
 
 
