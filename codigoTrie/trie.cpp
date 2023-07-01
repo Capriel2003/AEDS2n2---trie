@@ -156,6 +156,36 @@ public:
 
 int main() {
     Trie trie;
+    
+    ifstream entrada;
+    string documento = "documento1.txt";
+    entrada.open(documento);
+    
+    if(entrada.is_open()){
+        string linha;
+        int pos = 1;
+        vector<pair<string, int>> palavras;
+        while(getline(entrada, linha)){
+            int fim = 0;
+            while ((fim = linha.find(" ")) != string::npos) {
+                palavras.push_back(make_pair(linha.substr(0, fim), pos));
+                pos = pos+fim+1;
+                linha.erase(0, fim + 1);
+            }
+            palavras.push_back(make_pair(linha, pos));
+            pos = pos+linha.length();
+        }
+        for(auto &str :palavras) {
+            cout << "inserindo: " << str.first << " " << str.second << endl;
+            trie.inserir(documento, tratarTexto(str.first), str.second);
+        }
+        entrada.close();
+    
+        for(auto &str :palavras) 
+            cout << str.first << " " << str.second << endl;
+    }
+
+    
     string p = "Exemplõ";
     tratarTexto(p);
     trie.inserir("exemplo", "documento1.txt", 10);
