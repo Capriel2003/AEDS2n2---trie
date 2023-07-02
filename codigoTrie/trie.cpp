@@ -56,7 +56,7 @@ class Ocorrencia {
 class Documento {
     public:
         string nome;
-        list<Ocorrencia*> ocorrencias;
+        list<int> ocorrencias;
         Documento* proximo;
         Documento(const string& docNome) : nome(docNome), proximo(nullptr) {
             //construtor vazio com nenhuma entrada
@@ -95,6 +95,7 @@ public:
             }
         }
     }
+
     void realoca(NoTrie* no){
         NoTrie* atual = raiz;
         string palavra = no->chave;
@@ -106,8 +107,7 @@ public:
                 string s(1, x);
                 atual->filhos[indice] = new NoTrie(s);
                 atual = atual->filhos[indice];
-                atual->filhos[26] = new NoTrie(palavra);
-                atual->filhos[26]->documentos = no->documentos;
+                atual->filhos[26] = no;
                 return;
             }
             atual = atual->filhos[indice];
@@ -136,14 +136,20 @@ public:
             }
             atual = atual->filhos[indice];
         }
-        atual->filhos[26] = new NoTrie(palavra);
 
+        cout << "asdfsa";
+        if(atual->filhos[26] == nullptr)
+            atual->filhos[26] = new NoTrie(palavra);
+
+        cout << "asdfsa";
         atual = atual->filhos[26];
+
         // Cria ou encontra o nó do documento
         Documento* documentoNo = nullptr;
         for (auto doc : atual->documentos) {
             cout << "for dos documentos"<< endl;
             if (doc->nome == nomeDocumento) {
+                cout << "Documento co o mesmo nome" << endl;
                 documentoNo = doc;
                 break;
             }
@@ -156,13 +162,14 @@ public:
 
         // Cria o nó de ocorrência e adiciona ao documento
         Ocorrencia* ocorrenciaNo = new Ocorrencia(posicao);
-        documentoNo->ocorrencias.push_back(ocorrenciaNo);
+        documentoNo->ocorrencias.push_back(posicao);
+        cout << "tam do doc de "  << palavra << ": " << documentoNo->ocorrencias.size() << endl;;
 
         //atual->documentos.push_back(documentoNo);
     }
 
-    map<string, pair<string, list<Ocorrencia*>>> buscaPalavra(string palavra) {
-        map<string, pair<string, list<Ocorrencia*>>> ocorrencias;
+    map<string, pair<string, list<int>>> buscaPalavra(string palavra) {
+        map<string, pair<string, list<int>>> ocorrencias;
         NoTrie* atual = raiz;
         cout << "buscando " << palavra << endl;
         for (char c: palavra) {
@@ -179,19 +186,19 @@ public:
         // Encontrou a palavra, comeca a incrementar essas ocorrencias numa lista
         for (Documento* doc : atual->filhos[26]->documentos) {
             cout << "for doc" << endl;
-            for (Ocorrencia* ocorrencia : doc->ocorrencias) {
-                cout << palavra << " no documento " << doc->nome << " na posicao " << (*ocorrencia).posicao << endl;
-                ocorrencias[doc->nome].first = palavra;
-                ocorrencias[doc->nome].second.push_back(ocorrencia);
+            ocorrencias[doc->nome].first = palavra;
+            for (auto x: doc->ocorrencias) {
+                cout << palavra << " no documento " << doc->nome << " na posicao " <<  doc->ocorrencias.size() << endl;
+                ocorrencias[doc->nome].second.push_back(x);
             }
         }
         return ocorrencias;
     }
 
-    map<string,list<pair<string, list<Ocorrencia*>>>> buscaFrase(const string& fraseInt){
+    map<string,list<pair<string, list<int>>>> buscaFrase(const string& fraseInt){
         vector <string> frase = separaFrase(fraseInt);
-        map<string,list<pair<string, list<Ocorrencia*>>>> ocorrencias;
-        map<string, pair<string, list<Ocorrencia*>>> aux;
+        map<string,list<pair<string, list<int>>>> ocorrencias;
+        map<string, pair<string, list<int>>> aux;
 
         for(auto x: frase){
             aux = buscaPalavra(x);
@@ -210,24 +217,21 @@ int main() {
     string documento = "documento1.txt";
     entrada.open(documento);
 
-    string p = "Exemplõ";
-    tratarTexto(p);
     //trie.inserir("documento1.txt", "abate", 10);
     trie.inserir("documento2.txt", "exemplo", 10);
     trie.inserir("documento2.txt", "exemple", 12);
-    trie.inserir("documento2.txt", "exemplificar", 12);
-    trie.inserir("documento2.txt", "exempli", 12);
-    trie.inserir("documento2.txt", "exempli", 52);
-    trie.inserir("documento2.txt", "exempli", 2);
+    trie.inserir("documento2.txt", "exemple", 30);
+    trie.inserir("documento2.txt", "exemple", 20);
+    //trie.inserir("documento1.txt", "exemple", 1);
     //trie.inserir("documento1.txt", "casamento", 10);
     NoTrie* raiz = trie.raiz;
     trie.imprime(raiz);
     //trie.inserir("documento1.txt", "este", 20);
 
-    string palavraBusca = "exemplo";
+    string palavraBusca = "exemple";
     string fraseBusca = "seu pai eh corno";
-    map<string, pair<string, list<Ocorrencia*>>> ocorrenciasPalavra = trie.buscaPalavra(palavraBusca);
-    //map<string, list<pair<string, list<Ocorrencia*>>>> ocorrenciaFrase = trie.buscaFrase(fraseBusca);
+    map<string, pair<string, list<int>>> ocorrenciasPalavra = trie.buscaPalavra(palavraBusca);
+    //map<string, list<pair<string, list<int>>>> ocorrenciaFrase = trie.buscaFrase(fraseBusca);
 
     if (ocorrenciasPalavra.empty()) {
         cout << "Palavra '" << palavraBusca << "' nao encontrada." << endl;
@@ -237,11 +241,11 @@ int main() {
         for (auto ocorrencia : ocorrenciasPalavra) {
             cout << ocorrencia.first << endl;
             for(auto x: ocorrencia.second.second){
-                cout << x->posicao <<endl;
+                cout << x <<endl;
             }
         }
     }
-    palavraBusca = "exempli";
+    palavraBusca = "casa";
     ocorrenciasPalavra = trie.buscaPalavra(palavraBusca);
     if (ocorrenciasPalavra.empty()) {
         cout << "Palavra '" << palavraBusca << "' nao encontrada." << endl;
@@ -251,7 +255,7 @@ int main() {
         for (auto ocorrencia : ocorrenciasPalavra) {
             cout << ocorrencia.first << endl;
             for(auto x: ocorrencia.second.second){
-                cout << x->posicao <<endl;
+                cout << x<<endl;
             }
         }
     }
