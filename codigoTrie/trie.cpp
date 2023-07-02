@@ -83,6 +83,7 @@ public:
     }
 
     void imprime(NoTrie* atual){
+        cout << "funcao immprime" << endl << endl;
         NoTrie* aux = atual;
         for(auto x: atual->filhos)
             cout << x << " ";
@@ -95,32 +96,53 @@ public:
             }
         }
     }
+    void realoca(NoTrie* no){
+        NoTrie* atual = raiz;
+        string palavra = no->chave;
+        cout << "realocando " << palavra << endl;
+        int indice;
+        for (char x: palavra){
+            indice = x - 'a';
+            if (atual->filhos[indice] == nullptr){
+                string s(1, x);
+                atual->filhos[indice] = new NoTrie(s);
+                cout << "1 " << endl;
+                atual = atual->filhos[indice];
+                cout << "2 "  << endl;
+                atual->filhos[26] = new NoTrie(palavra);
+                cout << "3 " << endl;
+                atual->filhos[26]->documentos = no->documentos;
+                cout << "4 "  << endl;
+                return;
+            }
+            atual = atual->filhos[indice];
+        }
+    }
 
     void inserir(const string& nomeDocumento, const string& palavra, int posicao) {
+        cout << "inserido " << palavra << endl;
         NoTrie* atual = raiz;
         int indice;
         for (char x: palavra) {
             indice = x - 'a';
             if (atual->filhos[26] == nullptr){//verifica se não é o final de uma ramificação
                 if (atual->filhos[indice] == nullptr) {//se o caractere estiver livre, adiciona a palavra e o ponto para representar o final de uma ramificação
-                    atual->filhos[indice] = new NoTrie(palavra);
+                    string s(1, x);
+                    atual->filhos[indice] = new NoTrie(s);
                     atual = atual->filhos[indice];
                     break;
                 }
-                atual = atual->filhos[indice];
             }
             else{ //se for o fim de uma ramificação
+                realoca(atual->filhos[26]);
                 atual->filhos[26] = nullptr;
-                string aux =(*atual).chave;
-                string s(1, x);
-                atual->filhos[indice] = new NoTrie(s);
-                inserir(nomeDocumento, aux, posicao);
-                atual = atual->filhos[indice];
             }
+            atual = atual->filhos[indice];
         }
-        atual->filhos[26] = new NoTrie(".");
-        cout << palavra << " fim do for " << atual->chave << endl;
+        atual->filhos[26] = new NoTrie(palavra);
+        cout << palavra << " fim do for no '" << atual->chave <<"' palavra = " <<  atual->filhos[26]->chave<< endl;
 
+        atual = atual->filhos[26];
         // Cria ou encontra o nó do documento
         Documento* documentoNo = nullptr;
         for (auto doc : atual->documentos) {
@@ -131,7 +153,7 @@ public:
             }
         }
         if (documentoNo == nullptr) {
-            cout << "inseri documento " << nomeDocumento << endl;
+            cout << "inseri no documento: " << nomeDocumento << endl;
             documentoNo = new Documento(nomeDocumento);
             atual->documentos.push_back(documentoNo);
         }
@@ -141,8 +163,6 @@ public:
         documentoNo->ocorrencias.push_back(ocorrenciaNo);
 
         //atual->documentos.push_back(documentoNo);
-
-        cout << "documento '" << (*atual->documentos.front()).nome << "' com ocorrencia de '"  << atual->chave << "' na posicao " << (*(documentoNo->ocorrencias.front())).posicao << endl;
     }
 
     map<string, pair<string, list<Ocorrencia*>>> buscaPalavra(string palavra) {
@@ -158,15 +178,13 @@ public:
                 return ocorrencias;
             }
             else
-                if((*atual).chave == palavra)
+                if((*atual->filhos[26]).chave == palavra)
                     break;
             cout << "encontrei " << c << endl;
             atual = atual->filhos[indice];
         }
-        cout << "encontrou a palavra " << (*atual).chave << endl << endl;
 
         // Encontrou a palavra, comeca a incrementar essas ocorrencias numa lista
-        cout << "vazio? '" << (atual->documentos).empty() << "' com ocorrencia de '"  << (*atual).chave << "' na posicao " << /*(*(documentoNo->ocorrencias.front())).posicao << */endl;
         for (Documento* doc : atual->documentos) {
             cout << "for doc" << endl;
             for (Ocorrencia* ocorrencia : doc->ocorrencias) {
@@ -203,23 +221,17 @@ int main() {
     string p = "Exemplõ";
     tratarTexto(p);
     //trie.inserir("documento1.txt", "abate", 10);
-    trie.inserir("documento1.txt", "exemplo", 10);
-    trie.inserir("documento1.txt", "exempla", 12);
-    trie.inserir("documento1.txt", "exemplana", 10);
+    trie.inserir("documento2.txt", "exemplo", 10);
+    trie.inserir("documento2.txt", "exemple", 12);
+    //trie.inserir("documento1.txt", "casamento", 10);
     NoTrie* raiz = trie.raiz;
-    //trie.imprime(raiz);
+    trie.imprime(raiz);
     //trie.inserir("documento1.txt", "este", 20);
 
-
-    string palavraBusca = "exemplana";
+    string palavraBusca = "casamento";
     string fraseBusca = "seu pai eh corno";
     map<string, pair<string, list<Ocorrencia*>>> ocorrenciasPalavra = trie.buscaPalavra(palavraBusca);
     //map<string, list<pair<string, list<Ocorrencia*>>>> ocorrenciaFrase = trie.buscaFrase(fraseBusca);
-
-
-
-
-
 
     if (ocorrenciasPalavra.empty()) {
         cout << "Palavra '" << palavraBusca << "' nao encontrada." << endl;
@@ -233,7 +245,7 @@ int main() {
             }
         }
     }
-    palavraBusca = "exempla";
+    palavraBusca = "casa";
     ocorrenciasPalavra = trie.buscaPalavra(palavraBusca);
     if (ocorrenciasPalavra.empty()) {
         cout << "Palavra '" << palavraBusca << "' nao encontrada." << endl;
