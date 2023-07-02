@@ -163,29 +163,25 @@ public:
 
     map<string, pair<string, list<Ocorrencia*>>> buscaPalavra(string palavra) {
         map<string, pair<string, list<Ocorrencia*>>> ocorrencias;
-
         NoTrie* atual = raiz;
-
-        for (char c : palavra) {
+        cout << "buscando " << palavra << endl;
+        for (char c: palavra) {
+            cout << c << " " << atual->filhos[26] << endl;
             int indice = c - 'a';
-            if (atual->filhos[indice] == nullptr && atual->filhos[26] == nullptr){
-                // Palavra não encontrada, retorna vazio
-                cout << "diferenca encontrada no " << c <<endl;
-                return ocorrencias;
+            if (atual->filhos[indice] == nullptr){
+                if(atual->filhos[26] == nullptr)
+                    return ocorrencias;
+                break;
             }
-            else
-                if((*atual->filhos[26]).chave == palavra)
-                    break;
-            cout << "encontrei " << c << endl;
             atual = atual->filhos[indice];
         }
-
+        cout << "fim do for " << (*atual->filhos[26]).chave << endl;
         // Encontrou a palavra, comeca a incrementar essas ocorrencias numa lista
-        for (Documento* doc : atual->documentos) {
+        for (Documento* doc : atual->filhos[26]->documentos) {
             cout << "for doc" << endl;
             for (Ocorrencia* ocorrencia : doc->ocorrencias) {
                 cout << palavra << " no documento " << doc->nome << " na posicao " << (*ocorrencia).posicao << endl;
-                ocorrencias[doc->nome].first=palavra;
+                ocorrencias[doc->nome].first = palavra;
                 ocorrencias[doc->nome].second.push_back(ocorrencia);
             }
         }
@@ -219,12 +215,16 @@ int main() {
     //trie.inserir("documento1.txt", "abate", 10);
     trie.inserir("documento2.txt", "exemplo", 10);
     trie.inserir("documento2.txt", "exemple", 12);
+    trie.inserir("documento2.txt", "exemplificar", 12);
+    trie.inserir("documento2.txt", "exempli", 12);
+    trie.inserir("documento2.txt", "exempli", 52);
+    trie.inserir("documento2.txt", "exempli", 2);
     //trie.inserir("documento1.txt", "casamento", 10);
     NoTrie* raiz = trie.raiz;
     trie.imprime(raiz);
     //trie.inserir("documento1.txt", "este", 20);
 
-    string palavraBusca = "casamento";
+    string palavraBusca = "exemplo";
     string fraseBusca = "seu pai eh corno";
     map<string, pair<string, list<Ocorrencia*>>> ocorrenciasPalavra = trie.buscaPalavra(palavraBusca);
     //map<string, list<pair<string, list<Ocorrencia*>>>> ocorrenciaFrase = trie.buscaFrase(fraseBusca);
@@ -241,7 +241,7 @@ int main() {
             }
         }
     }
-    palavraBusca = "casa";
+    palavraBusca = "exempli";
     ocorrenciasPalavra = trie.buscaPalavra(palavraBusca);
     if (ocorrenciasPalavra.empty()) {
         cout << "Palavra '" << palavraBusca << "' nao encontrada." << endl;
