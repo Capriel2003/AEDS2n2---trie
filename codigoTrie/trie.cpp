@@ -69,7 +69,6 @@ class NoTrie {
         list<Documento*> documentos;
         vector<NoTrie*> filhos;
         NoTrie(const string& chaveNo) : chave(chaveNo), filhos(TamAlfabeto + 1, nullptr) {
-            cout << endl << "chave inserida: " << chave << endl << endl;
         }
 };
 
@@ -99,7 +98,6 @@ public:
     void realoca(NoTrie* no){
         NoTrie* atual = raiz;
         string palavra = no->chave;
-        cout << "realocando " << palavra << endl;
         int indice;
         for (char x: palavra){
             indice = x - 'a';
@@ -112,10 +110,10 @@ public:
             }
             atual = atual->filhos[indice];
         }
+        atual->filhos[26] = no;
     }
 
     void inserir(const string& nomeDocumento, const string& palavra, int posicao) {
-        cout << "inserido " << palavra << endl;
         NoTrie* atual = raiz;
         int indice;
         for (char x: palavra) {
@@ -131,31 +129,27 @@ public:
             else{ //se for o fim de uma ramificação
                 string s(1, x);
                 atual->filhos[indice] = new NoTrie(s);
-                realoca(atual->filhos[26]);
+                NoTrie* aux = atual->filhos[26];
                 atual->filhos[26] = nullptr;
+                realoca(aux);
             }
             atual = atual->filhos[indice];
         }
 
-        cout << "asdfsa";
         if(atual->filhos[26] == nullptr)
             atual->filhos[26] = new NoTrie(palavra);
 
-        cout << "asdfsa";
         atual = atual->filhos[26];
 
         // Cria ou encontra o nó do documento
         Documento* documentoNo = nullptr;
         for (auto doc : atual->documentos) {
-            cout << "for dos documentos"<< endl;
             if (doc->nome == nomeDocumento) {
-                cout << "Documento co o mesmo nome" << endl;
                 documentoNo = doc;
                 break;
             }
         }
         if (documentoNo == nullptr) {
-            cout << "inseri no documento: " << nomeDocumento << endl;
             documentoNo = new Documento(nomeDocumento);
             atual->documentos.push_back(documentoNo);
         }
@@ -163,7 +157,6 @@ public:
         // Cria o nó de ocorrência e adiciona ao documento
         Ocorrencia* ocorrenciaNo = new Ocorrencia(posicao);
         documentoNo->ocorrencias.push_back(posicao);
-        cout << "tam do doc de "  << palavra << ": " << documentoNo->ocorrencias.size() << endl;;
 
         //atual->documentos.push_back(documentoNo);
     }
@@ -171,9 +164,7 @@ public:
     map<string, pair<string, list<int>>> buscaPalavra(string palavra) {
         map<string, pair<string, list<int>>> ocorrencias;
         NoTrie* atual = raiz;
-        cout << "buscando " << palavra << endl;
         for (char c: palavra) {
-            cout << c << " " << atual->filhos[26] << endl;
             int indice = c - 'a';
             if (atual->filhos[indice] == nullptr){
                 if(atual->filhos[26] == nullptr)
@@ -182,13 +173,10 @@ public:
             }
             atual = atual->filhos[indice];
         }
-        cout << "fim do for " << (*atual->filhos[26]).chave << endl;
         // Encontrou a palavra, comeca a incrementar essas ocorrencias numa lista
         for (Documento* doc : atual->filhos[26]->documentos) {
-            cout << "for doc" << endl;
             ocorrencias[doc->nome].first = palavra;
             for (auto x: doc->ocorrencias) {
-                cout << palavra << " no documento " << doc->nome << " na posicao " <<  doc->ocorrencias.size() << endl;
                 ocorrencias[doc->nome].second.push_back(x);
             }
         }
@@ -217,18 +205,13 @@ int main() {
     string documento = "documento1.txt";
     entrada.open(documento);
 
-    //trie.inserir("documento1.txt", "abate", 10);
-    trie.inserir("documento2.txt", "exemplo", 10);
-    trie.inserir("documento2.txt", "exemple", 12);
-    trie.inserir("documento2.txt", "exemple", 30);
-    trie.inserir("documento2.txt", "exemple", 20);
-    //trie.inserir("documento1.txt", "exemple", 1);
-    //trie.inserir("documento1.txt", "casamento", 10);
+    trie.inserir("documento2.txt", "casa", 10);
+    trie.inserir("documento2.txt", "casamento", 12);
     NoTrie* raiz = trie.raiz;
     trie.imprime(raiz);
     //trie.inserir("documento1.txt", "este", 20);
 
-    string palavraBusca = "exemple";
+    string palavraBusca = "casamento";
     string fraseBusca = "seu pai eh corno";
     map<string, pair<string, list<int>>> ocorrenciasPalavra = trie.buscaPalavra(palavraBusca);
     //map<string, list<pair<string, list<int>>>> ocorrenciaFrase = trie.buscaFrase(fraseBusca);
@@ -239,9 +222,9 @@ int main() {
     else {
         cout << "Ocorrencias da palavra '" << palavraBusca << "':" << endl;
         for (auto ocorrencia : ocorrenciasPalavra) {
-            cout << ocorrencia.first << endl;
+            cout << "    " << ocorrencia.first << endl;
             for(auto x: ocorrencia.second.second){
-                cout << x <<endl;
+                cout << "        " << x <<endl;
             }
         }
     }
@@ -253,9 +236,9 @@ int main() {
     else {
         cout << "Ocorrencias da palavra '" << palavraBusca << "':" << endl;
         for (auto ocorrencia : ocorrenciasPalavra) {
-            cout << ocorrencia.first << endl;
+            cout << "    " << ocorrencia.first << endl;
             for(auto x: ocorrencia.second.second){
-                cout << x<<endl;
+                cout << "        " << x <<endl;
             }
         }
     }
