@@ -83,14 +83,13 @@ public:
     }
 
     void imprime(NoTrie* atual){
-        cout << "funcao immprime" << endl << endl;
         NoTrie* aux = atual;
         for(auto x: atual->filhos)
             cout << x << " ";
         cout << endl << endl;
         for(int i = 0; i<26; i++){
             if(atual->filhos[i] != nullptr){
-                cout << "No do " << (char)(i+97) << ": ";
+                cout << "No do " << (char)(i+97) << ": " << endl;
                 aux = atual->filhos[i];
                 imprime(aux);
             }
@@ -106,13 +105,9 @@ public:
             if (atual->filhos[indice] == nullptr){
                 string s(1, x);
                 atual->filhos[indice] = new NoTrie(s);
-                cout << "1 " << endl;
                 atual = atual->filhos[indice];
-                cout << "2 "  << endl;
                 atual->filhos[26] = new NoTrie(palavra);
-                cout << "3 " << endl;
                 atual->filhos[26]->documentos = no->documentos;
-                cout << "4 "  << endl;
                 return;
             }
             atual = atual->filhos[indice];
@@ -134,13 +129,14 @@ public:
                 }
             }
             else{ //se for o fim de uma ramificação
+                string s(1, x);
+                atual->filhos[indice] = new NoTrie(s);
                 realoca(atual->filhos[26]);
                 atual->filhos[26] = nullptr;
             }
             atual = atual->filhos[indice];
         }
         atual->filhos[26] = new NoTrie(palavra);
-        cout << palavra << " fim do for no '" << atual->chave <<"' palavra = " <<  atual->filhos[26]->chave<< endl;
 
         atual = atual->filhos[26];
         // Cria ou encontra o nó do documento
