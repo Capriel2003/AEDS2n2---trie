@@ -22,6 +22,7 @@ vector<string> separaFrase(string frase){
 }
 
 string tratarTexto(string& texto) {
+    
     // Converter caracteres maiúsculos para minúsculos
     transform(texto.begin(), texto.end(), texto.begin(), ::tolower);
 
@@ -35,6 +36,7 @@ string tratarTexto(string& texto) {
 
     // Remover caracteres não alfanuméricos e espaços em branco
     texto = regex_replace(texto, regex("[^a-zA-Z\\s]"), "");
+    
 
     return texto;
 }
@@ -164,8 +166,8 @@ public:
     map<string, pair<string, list<int>>> buscaPalavra(string palavra) {
         map<string, pair<string, list<int>>> ocorrencias;
         NoTrie* atual = raiz;
-        for (char c: palavra) {
-            int indice = c - 'a';
+        for (char x: palavra) {
+            int indice = x - 'a';
             if (atual->filhos[indice] == nullptr){
                 if(atual->filhos[26] == nullptr)
                     return ocorrencias;
@@ -173,6 +175,9 @@ public:
             }
             atual = atual->filhos[indice];
         }
+
+        
+
         // Encontrou a palavra, comeca a incrementar essas ocorrencias numa lista
         for (Documento* doc : atual->filhos[26]->documentos) {
             ocorrencias[doc->nome].first = palavra;
@@ -199,23 +204,21 @@ public:
 };
 
 int main() {
-    Trie trie;
+    Trie trie; 
+    int val;
+    string palavraBusca, fraseBusca, pal;
 
-    ifstream entrada;
-    string documento = "documento1.txt";
-    entrada.open(documento);
 
-    trie.inserir("documento2.txt", "casa", 10);
-    trie.inserir("documento2.txt", "casamento", 12);
-    NoTrie* raiz = trie.raiz;
-    trie.imprime(raiz);
+    // trie.inserir("documento2.txt", "casa", 10);
+    // trie.inserir("documento2.txt", "casamento", 12);
+    // NoTrie* raiz = trie.raiz;
+    // trie.imprime(raiz);
     //trie.inserir("documento1.txt", "este", 20);
-
-    string palavraBusca = "casamento";
-    string fraseBusca = "seu pai eh corno";
-    map<string, pair<string, list<int>>> ocorrenciasPalavra = trie.buscaPalavra(palavraBusca);
+    
+    
     //map<string, list<pair<string, list<int>>>> ocorrenciaFrase = trie.buscaFrase(fraseBusca);
 
+    /*
     if (ocorrenciasPalavra.empty()) {
         cout << "Palavra '" << palavraBusca << "' nao encontrada." << endl;
     }
@@ -242,6 +245,7 @@ int main() {
             }
         }
     }
+    */
 
 /*
     if (ocorrenciaFrase.empty()) {
@@ -259,31 +263,112 @@ int main() {
             }
         }
     }
-
-
-    if(entrada.is_open()){
-        string linha;
-        int pos = 1;
-        vector<pair<string, int>> palavras;
-        while(getline(entrada, linha)){
-            int fim = 0;
-            while ((fim = linha.find(" ")) != string::npos) {
-                palavras.push_back(make_pair(linha.substr(0, fim), pos));
-                pos = pos+fim+1;
-                linha.erase(0, fim + 1);
-            }
-            palavras.push_back(make_pair(linha, pos));
-            pos = pos+linha.length();
-        }
-        for(auto &str :palavras) {
-            cout << "inserindo: " << str.first << " " << str.second << endl;
-            trie.inserir(documento, tratarTexto(str.first), str.second);
-        }
-        entrada.close();
-
-        for(auto &str :palavras)
-            cout << str.first << " " << str.second << endl;
-    }
 */
+
+
+    vector<string> nomeArquivos;
+    ifstream robots("../../textos/robots.txt"); // Abre o arquivo para leitura
+
+    if (robots.is_open())   // Verifica se o arquivo foi aberto com sucesso
+    {
+        string linha;
+        while (getline(robots,linha))   // Lê cada linha do arquivo
+        {
+            nomeArquivos.push_back(linha);
+            cout << linha << endl;
+        }
+        robots.close();
+    }
+    else
+    {
+        cout<<"F"<<endl;
+        return 0;
+    }
+    
+    ifstream entrada;
+    for(auto x: nomeArquivos){
+        entrada.open("../../textos/"+x);
+
+        if(entrada.is_open()){
+            string linha;
+            int pos = 1;
+            vector<pair<string, int>> palavras;
+            while(getline(entrada, linha)){
+                int fim = 0;
+                while ((fim = linha.find(" ")) != string::npos) {
+                    pal = linha.substr(0, fim);
+                    palavras.push_back(make_pair(tratarTexto(pal), pos));
+                    pos = pos+fim+1;
+                    linha.erase(0, fim + 1);
+                }
+                palavras.push_back(make_pair(linha, pos));
+                pos = pos+linha.length();
+            }
+            for(auto &str :palavras) {
+                cout << "inserindo: " << str.first << " " << str.second << endl;
+                trie.inserir(x, str.first, str.second);
+            }
+            entrada.close();
+
+            for(auto &str :palavras)
+                cout << str.first << " " << str.second << endl;
+        }
+        else {
+            cout << "deu ruim" << endl;
+        }
+    }
+
+
+
+    cout << "\n1 - Buscar a palavra "<<endl<<
+            "2 - Buscar a frase "<<endl<<
+            "0 - Fechar o programa "<<endl;
+
+    
+
+    map<string, pair<string, list<int>>> ocorrenciasPalavra;
+    while (cin>>val){
+        switch(val){
+            case 1:
+                cout << "Digite a palavra a ser buscada: ";
+                cin >> palavraBusca;
+                cout << endl;
+                ocorrenciasPalavra = trie.buscaPalavra(palavraBusca);
+                if (ocorrenciasPalavra.empty()) {
+                    cout << "Palavra '" << palavraBusca << "' nao encontrada." << endl;
+                }
+                else {
+                    cout << "Ocorrencias da palavra '" << palavraBusca << "':" << endl;
+                    for (auto ocorrencia : ocorrenciasPalavra) {
+                        cout << "    " << ocorrencia.first << endl;
+                        for(auto x: ocorrencia.second.second){
+                            cout << "        " << x <<endl;
+                        }
+                    }
+                }
+                break;
+
+            case 2:
+                cout << "Digite a frase a ser buscada: ";
+                cin >> fraseBusca;
+                cout << endl;
+
+            case 0:
+            break;
+
+            default:
+                break;
+        }
+        cout << "\n1 - Buscar a palavra "<<endl<<
+            "2 - Buscar a frase "<<endl<<
+            "0 - Fechar o programa "<<endl;
+    }
+
+
+    
+    
+
+    
+
     return 0;
 }
