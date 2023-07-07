@@ -1,0 +1,3 @@
+amigo.txt
+termo.txt
+meme.txt
