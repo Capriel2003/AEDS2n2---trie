@@ -176,7 +176,8 @@ public:
             atual = atual->filhos[indice];
         }
 
-        
+        string p = atual->filhos[26]->chave;
+        if(p.length()!=palavra.length()) return ocorrencias;
 
         // Encontrou a palavra, comeca a incrementar essas ocorrencias numa lista
         for (Documento* doc : atual->filhos[26]->documentos) {
@@ -275,7 +276,7 @@ int main() {
         while (getline(robots,linha))   // Lê cada linha do arquivo
         {
             nomeArquivos.push_back(linha);
-            cout << linha << endl;
+            cout << linha << " inserido" << endl;
         }
         robots.close();
     }
@@ -305,13 +306,13 @@ int main() {
                 pos = pos+linha.length();
             }
             for(auto &str :palavras) {
-                cout << "inserindo: " << str.first << " " << str.second << endl;
+                //cout << "inserindo: " << str.first << " " << str.second << endl;
                 trie.inserir(x, str.first, str.second);
             }
             entrada.close();
 
-            for(auto &str :palavras)
-                cout << str.first << " " << str.second << endl;
+            // for(auto &str :palavras)
+            //     cout << str.first << " " << str.second << endl;
         }
         else {
             cout << "deu ruim" << endl;
@@ -354,7 +355,7 @@ int main() {
                 cout << endl;
 
             case 0:
-            break;
+                return 0;
 
             default:
                 break;
